@@ -34,8 +34,8 @@ public class ExampleMod implements ModInitializer {
     public void onInitialize() {
         final Style whisper = Style.EMPTY.withColor(TextColor.fromFormatting(Formatting.GRAY)).withItalic(true);
         final Style spinnyText = Style.EMPTY.withObfuscated(true)
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("run /toggle_nsfw to see this message!")))
-                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/toggle_nsfw"));
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("run /nsfw show to see this message!")))
+                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/nsfw show"));
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(literal("nsfw")
                     .then(argument("value", StringArgumentType.greedyString())
