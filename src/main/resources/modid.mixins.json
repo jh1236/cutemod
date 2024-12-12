@@ -3,7 +3,7 @@
 	"package": "com.example.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"server": [
-		"ExampleMixin"
+		"MessageCommandMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
