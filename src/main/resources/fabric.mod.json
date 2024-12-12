@@ -2,10 +2,10 @@
 	"schemaVersion": 1,
 	"id": "modid",
 	"version": "${version}",
-	"name": "Example mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "AutoGG",
+	"description": "A really simple mod that automatically sends GG on advancement get and o/ on join",
 	"authors": [
-		"Me!"
+		"Jh1236"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
@@ -31,7 +31,7 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.16.9",
-		"minecraft": "~1.21.4",
+		"minecraft": "~1.21.3",
 		"java": ">=21",
 		"fabric-api": "*"
 	},
