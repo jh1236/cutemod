@@ -34,8 +34,11 @@ public class ExampleMod implements ModInitializer {
     public void onInitialize() {
         final Style whisper = Style.EMPTY.withColor(TextColor.fromFormatting(Formatting.GRAY)).withItalic(true);
         final Style spinnyText = Style.EMPTY.withObfuscated(true)
-                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("run /nsfw show to see this message!")))
-                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/nsfw show"));
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("run /nsfw shown to see this message!")))
+                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/nsfw shown"));
+        final Style hideText = Style.EMPTY
+                .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal("run /nsfw hidden to get hide this message!")))
+                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/nsfw hidden")).withColor(Formatting.YELLOW);
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             dispatcher.register(literal("nsfw")
                     .then(argument("value", StringArgumentType.greedyString())
@@ -52,7 +55,7 @@ public class ExampleMod implements ModInitializer {
                                     String name = playerEntity.getNameForScoreboard();
                                     switch (freaks.getOrDefault(name, 1)) {
                                         case 1 -> {
-                                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> ").append(Text.literal(value).setStyle(spinnyText)), false);
+                                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> ").append(Text.literal(value).setStyle(spinnyText)).append(Text.literal(" [Hide]").setStyle(hideText)), false);
                                         }
                                         case 2 -> {
                                             playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> " + value), false);
