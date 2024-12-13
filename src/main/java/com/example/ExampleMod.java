@@ -25,9 +25,16 @@ public class ExampleMod implements ModInitializer {
     // It is considered best practice to use your mod id as the logger's name.
     // That way, it's clear which mod wrote info, warnings, and errors.
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-    public final HashMap<String, Integer> freaks = new HashMap<>();
+    public final HashMap<String, ViewingTypes> freaks = new HashMap<>();
     public final HashMap<String, PlayerEntity> convo = new HashMap<>();
 
+
+    public enum ViewingTypes {
+        HIDDEN,
+        SCRAMBLED,
+        HOVER,
+        SHOWN
+    }
 
     @Override
 
@@ -46,18 +53,27 @@ public class ExampleMod implements ModInitializer {
                                 final String value = StringArgumentType.getString(context, "value");
                                 var player = context.getSource().getPlayer();
                                 var playerName = player.getNameForScoreboard();
-                                if (!freaks.containsKey(playerName)) {
-                                    freaks.put(playerName, 2);
+                                var senderFreakiness = freaks.getOrDefault(playerName, ViewingTypes.HIDDEN);
+                                if (senderFreakiness != ViewingTypes.SHOWN && senderFreakiness != ViewingTypes.HOVER) {
+                                    freaks.put(playerName, ViewingTypes.SHOWN);
                                     context.getSource().sendFeedback(() -> Text.literal("You were not registered as nsfw, so we added you to the freakshow!").setStyle(whisper), false);
                                 }
                                 MinecraftServer server = player.getServer();
                                 for (var playerEntity : server.getPlayerManager().getPlayerList()) {
                                     String name = playerEntity.getNameForScoreboard();
-                                    switch (freaks.getOrDefault(name, 1)) {
-                                        case 1 -> {
+                                    switch (freaks.getOrDefault(name, ViewingTypes.SCRAMBLED)) {
+                                        case HIDDEN -> {
+                                            // No need to send a message if they keep chat hidden
+                                        }
+                                        case ViewingTypes.SCRAMBLED -> {
                                             playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> ").append(Text.literal(value).setStyle(spinnyText)).append(Text.literal(" [Hide]").setStyle(hideText)), false);
                                         }
-                                        case 2 -> {
+                                        case ViewingTypes.HOVER -> {
+                                            final Style hoverText = Style.EMPTY.withObfuscated(true)
+                                                    .withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(value)));
+                                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> ").append(Text.literal(value).setStyle(hoverText)), false);
+                                        }
+                                        case ViewingTypes.SHOWN -> {
                                             playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> " + value), false);
                                         }
                                     }
@@ -70,7 +86,7 @@ public class ExampleMod implements ModInitializer {
                         final ServerCommandSource source = context.getSource();
                         if (!source.isExecutedByPlayer()) return 0;
                         final String self = source.getPlayer().getNameForScoreboard();
-                        freaks.put(self, 0);
+                        freaks.put(self, ViewingTypes.HIDDEN);
                         context.getSource().sendFeedback(() -> Text.literal("We get it. Waiting till marriage. You have hidden the NSFW chat."), false);
                         return 1;
                     })));
@@ -79,7 +95,7 @@ public class ExampleMod implements ModInitializer {
                         final ServerCommandSource source = context.getSource();
                         if (!source.isExecutedByPlayer()) return 0;
                         final String self = source.getPlayer().getNameForScoreboard();
-                        freaks.put(self, 1);
+                        freaks.put(self, ViewingTypes.SCRAMBLED);
                         context.getSource().sendFeedback(() -> Text.literal("So does the mystery add to the fun or...  The NSFW Chat will be scrambled."), false);
                         return 1;
                     })));
@@ -88,8 +104,17 @@ public class ExampleMod implements ModInitializer {
                         final ServerCommandSource source = context.getSource();
                         if (!source.isExecutedByPlayer()) return 0;
                         final String self = source.getPlayer().getNameForScoreboard();
-                        freaks.put(self, 2);
+                        freaks.put(self, ViewingTypes.SHOWN);
                         context.getSource().sendFeedback(() -> Text.literal("You little pervert! You have been added to the NSFW chat."), false);
+                        return 1;
+                    })));
+            dispatcher.register(literal("nsfw")
+                    .then(literal("hover").executes(context -> {
+                        final ServerCommandSource source = context.getSource();
+                        if (!source.isExecutedByPlayer()) return 0;
+                        final String self = source.getPlayer().getNameForScoreboard();
+                        freaks.put(self, ViewingTypes.HOVER);
+                        context.getSource().sendFeedback(() -> Text.literal("So you can only take it in small doses huh? The NSFW chat will be visible on hover."), false);
                         return 1;
                     })));
             final LiteralCommandNode<ServerCommandSource> message = dispatcher.register(literal("w")
@@ -113,9 +138,13 @@ public class ExampleMod implements ModInitializer {
                 context.getSource().sendFeedback(() -> Text.literal("You whisper to " + otherPlayer.getNameForScoreboard() + ": " + msg).setStyle(whisper), false);
                 return 1;
             })));
+            dispatcher.register(literal("impersonate")
+                    .then(argument("player", StringArgumentType.string()).then(argument("msg", StringArgumentType.greedyString()).executes(context -> {
+                        final var otherPlayer = StringArgumentType.getString(context, "player");
+                        final var msg = StringArgumentType.getString(context, "msg");
+                        context.getSource().getPlayer().getServer().getPlayerManager().broadcast(Text.literal("<" + otherPlayer + "> " + msg), false);
+                        return 1;
+                    }))));
         });
-
-
-        LOGGER.info("Hello Fabric world!");
     }
 }
