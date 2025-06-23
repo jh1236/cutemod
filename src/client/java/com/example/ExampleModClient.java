@@ -24,7 +24,7 @@ public class ExampleModClient implements ClientModInitializer {
                 context.getSource().sendFeedback(Text.literal("Wave on join toggled! Waving on join is " + (waves ? "" : "not ") + "enabled"));
                 return 1;
             }));
-            dispatcher.register(ClientCommandManager.literal("/nsfw show").executes(context -> {
+            dispatcher.register(ClientCommandManager.literal("toggle_ggs").executes(context -> {
                 ggs = !ggs;
                 context.getSource().sendFeedback(Text.literal("Advancement GG toggled! GG on advancement is " + (ggs ? "" : "not ") + "enabled"));
                 return 1;
