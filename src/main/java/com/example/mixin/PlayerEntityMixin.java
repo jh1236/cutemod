@@ -16,6 +16,7 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.storage.ReadView;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
@@ -28,6 +29,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import javax.xml.crypto.Data;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin {
@@ -60,6 +63,7 @@ public abstract class PlayerEntityMixin {
 
         world.setBlockState(pos, Blocks.CHEST.getDefaultState());
         var grave = (ChestBlockEntity) world.getBlockEntity(pos);
+        grave.getCustomName(new ReadView());
         grave.setStack(13, is);
 
         var player = (PlayerEntity) (Object) this;
