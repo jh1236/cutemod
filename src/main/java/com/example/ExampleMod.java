@@ -5,8 +5,16 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.command.argument.EntityArgumentType;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.BundleContentsComponent;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtByte;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -16,7 +24,9 @@ import net.minecraft.util.Formatting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -32,6 +42,13 @@ public class ExampleMod implements ModInitializer {
     public final HashMap<String, ViewingTypes> freaks = new HashMap<>();
     public final HashMap<String, PlayerEntity> convo = new HashMap<>();
 
+    public static ItemStack CustomBundle = Items.BLACK_BUNDLE.getDefaultStack();
+
+    static {
+        NbtCompound nbt = new NbtCompound();
+        nbt.put("graves", NbtByte.ONE);
+        CustomBundle.set(DataComponentTypes.CUSTOM_DATA, NbtComponent.of(nbt));
+    }
 
     public enum ViewingTypes {
         HIDDEN,
