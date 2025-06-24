@@ -2,6 +2,9 @@ package com.example.mixin;
 
 import com.example.ExampleMod;
 import com.example.IAddNoChecks;
+import net.minecraft.block.Blocks;
+import net.minecraft.component.type.ProfileComponent;
+import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.BundleContentsComponent;
@@ -16,7 +19,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3i;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,16 +51,22 @@ public abstract class PlayerEntityMixin {
         }
         is.set(DataComponentTypes.BUNDLE_CONTENTS, builder.build());
         is.set(DataComponentTypes.CUSTOM_NAME, getDisplayName().copy().append(Text.literal("'s belongings")).setStyle(Style.EMPTY.withColor(Formatting.BLUE)));
-        var pos = ((PlayerEntity) (Object) this).getBlockPos();
-        while (world.getBlockState(pos).isAir() && world.isInBuildLimit(pos)) {
+        var startPos = ((PlayerEntity) (Object) this).getBlockPos();
+        var pos = startPos;
+        while (!world.getBlockState(pos).isReplaceable()) {
             pos = pos.add(0, 1, 0);
+            if (!world.isInBuildLimit(pos)) { pos = new BlockPos(pos.getX()+1, startPos.getY(), pos.getZ()); }
         }
-        while (world.getBlockState(pos.down()).isAir() && world.isInBuildLimit(pos)) {
-            pos = pos.add(0, -1, 0);
-        }
-        var itemFrame = new ItemFrameEntity(world, pos, Direction.UP);
-        itemFrame.setHeldItemStack(is);
-        world.spawnEntity(itemFrame);
+
+        world.setBlockState(pos, Blocks.CHEST.getDefaultState());
+        var grave = (ChestBlockEntity) world.getBlockEntity(pos);
+        grave.setStack(13, is);
+
+        var player = (PlayerEntity) (Object) this;
+        var playerHead = Items.PLAYER_HEAD.getDefaultStack();
+        playerHead.set(DataComponentTypes.PROFILE, new ProfileComponent(player.getGameProfile()));
+        grave.setStack(4, playerHead);
+
         ci.cancel();
     }
 }
