@@ -19,7 +19,8 @@
 			"com.example.ExampleMod"
 		],
 		"client": [
-			"com.example.ExampleModClient"
+			"com.example.ExampleModClient",
+			"com.example.CustomKeybinds"
 		]
 	},
 	"mixins": [
@@ -33,7 +34,8 @@
 		"fabricloader": ">=0.16.9",
 		"minecraft": "~1.21.6",
 		"java": ">=21",
-		"fabric-api": "*"
+		"fabric-api": "*",
+		"fabric-key-binding-api-v1": "*"
 	},
 	"suggests": {
 		"another-mod": "*"
