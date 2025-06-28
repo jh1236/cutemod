@@ -3,20 +3,21 @@ package com.example;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientReceiveMessageEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
+import java.util.Random;
 
-public class ExampleModClient implements ClientModInitializer {
+public class ClientMessageManager implements ClientModInitializer {
     private final ArrayList<String> advancements = new ArrayList<>();
     private boolean waves = true;
     private boolean ggs = true;
+
+    private final Random random = new Random();
 
     @Override
     public void onInitializeClient() {
@@ -40,7 +41,7 @@ public class ExampleModClient implements ClientModInitializer {
         advancements.add(" has reached the goal");
         ClientPlayConnectionEvents.JOIN.register((clientPlayNetworkHandler, packetSender, minecraftClient) -> {
             if (minecraftClient.player != null && waves) {
-                minecraftClient.player.networkHandler.sendChatMessage("o/");
+                sendMessageWithRandomDelay(minecraftClient.player, "o/", 300, 2000);
             }
         });
     }
@@ -59,13 +60,25 @@ public class ExampleModClient implements ClientModInitializer {
 
             for (var i : advancements) {
                 if (message.contains(i)) {
-                    player.networkHandler.sendChatMessage("gg");
+                    sendMessageWithRandomDelay(player, "gg", 300, 2000);
                     return;
                 }
             }
         }
         if (message.contains(" joined the game") && waves) {
-            player.networkHandler.sendChatMessage("o/");
+            sendMessageWithRandomDelay(player, "o/", 300, 2000);
         }
+    }
+
+
+    private void sendMessageWithRandomDelay(ClientPlayerEntity player, String message, int minDelay, int maxDelay) {
+        new Thread(() -> {
+            try {
+                Thread.sleep(random.nextInt(minDelay, maxDelay));
+                player.networkHandler.sendChatMessage(message);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
     }
 }

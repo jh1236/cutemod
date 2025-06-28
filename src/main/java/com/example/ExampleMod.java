@@ -1,6 +1,8 @@
 package com.example;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -10,6 +12,7 @@ import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.BundleContentsComponent;
 import net.minecraft.component.type.NbtComponent;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -51,10 +54,7 @@ public class ExampleMod implements ModInitializer {
     }
 
     public enum ViewingTypes {
-        HIDDEN,
-        SCRAMBLED,
-        HOVER,
-        SHOWN
+        HIDDEN, SCRAMBLED, HOVER, SHOWN
     }
 
     @Override
@@ -62,94 +62,82 @@ public class ExampleMod implements ModInitializer {
         ServerPlayerEvents.JOIN.register(this::onJoin);
 
         final Style whisper = Style.EMPTY.withColor(TextColor.fromFormatting(Formatting.GRAY)).withItalic(true);
-        final Style spinnyText = Style.EMPTY.withObfuscated(true)
-                .withHoverEvent(new HoverEvent.ShowText(Text.literal("run /nsfw shown to see this message!")))
-                .withClickEvent(new ClickEvent.SuggestCommand("/nsfw shown"));
-        final Style hideText = Style.EMPTY
-                .withHoverEvent(new HoverEvent.ShowText(Text.literal("run /nsfw hidden to get hide this message!")))
-                .withClickEvent(new ClickEvent.SuggestCommand("/nsfw hidden")).withColor(Formatting.YELLOW);
+        final Style spinnyText = Style.EMPTY.withObfuscated(true).withHoverEvent(new HoverEvent.ShowText(Text.literal("run /nsfw shown to see this message!"))).withClickEvent(new ClickEvent.SuggestCommand("/nsfw shown"));
+        final Style hideText = Style.EMPTY.withHoverEvent(new HoverEvent.ShowText(Text.literal("run /nsfw hidden to get hide this message!"))).withClickEvent(new ClickEvent.SuggestCommand("/nsfw hidden")).withColor(Formatting.YELLOW);
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
-            dispatcher.register(literal("nsfw")
-                    .then(argument("value", StringArgumentType.greedyString())
-                            .executes(context -> {
-                                final String value = StringArgumentType.getString(context, "value");
-                                var player = context.getSource().getPlayer();
-                                var playerName = player.getNameForScoreboard();
-                                var senderFreakiness = freaks.getOrDefault(playerName, ViewingTypes.HIDDEN);
-                                if (senderFreakiness != ViewingTypes.SHOWN && senderFreakiness != ViewingTypes.HOVER) {
-                                    freaks.put(playerName, ViewingTypes.SHOWN);
-                                    context.getSource().sendFeedback(() -> Text.literal("You were not registered as nsfw, so we added you to the freakshow!").setStyle(whisper), false);
-                                }
-                                MinecraftServer server = player.getServer();
-                                for (var playerEntity : server.getPlayerManager().getPlayerList()) {
-                                    String name = playerEntity.getNameForScoreboard();
-                                    switch (freaks.getOrDefault(name, ViewingTypes.SCRAMBLED)) {
-                                        case HIDDEN -> {
-                                            // No need to send a message if they keep chat hidden
-                                        }
-                                        case ViewingTypes.SCRAMBLED -> {
-                                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> ").append(Text.literal(value).setStyle(spinnyText)).append(Text.literal(" [Hide]").setStyle(hideText)), false);
-                                        }
-                                        case ViewingTypes.HOVER -> {
-                                            final Style hoverText = Style.EMPTY.withObfuscated(true)
-                                                    .withHoverEvent(new HoverEvent.ShowText(Text.literal(value)));
-                                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> ").append(Text.literal(value).setStyle(hoverText)), false);
-                                        }
-                                        case ViewingTypes.SHOWN -> {
-                                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> " + value), false);
-                                        }
-                                    }
-                                }
+            dispatcher.register(literal("nsfw").then(argument("value", StringArgumentType.greedyString()).executes(context -> {
+                final String value = StringArgumentType.getString(context, "value");
+                var player = context.getSource().getPlayer();
+                var playerName = player.getNameForScoreboard();
+                var senderFreakiness = freaks.getOrDefault(playerName, ViewingTypes.HIDDEN);
+                if (senderFreakiness != ViewingTypes.SHOWN && senderFreakiness != ViewingTypes.HOVER) {
+                    freaks.put(playerName, ViewingTypes.SHOWN);
+                    context.getSource().sendFeedback(() -> Text.literal("You were not registered as nsfw, so we added you to the freakshow!").setStyle(whisper), false);
+                }
+                MinecraftServer server = player.getServer();
+                for (var playerEntity : server.getPlayerManager().getPlayerList()) {
+                    String name = playerEntity.getNameForScoreboard();
+                    switch (freaks.getOrDefault(name, ViewingTypes.SCRAMBLED)) {
+                        case HIDDEN -> {
+                            // No need to send a message if they keep chat hidden
+                        }
+                        case ViewingTypes.SCRAMBLED -> {
+                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> ").append(Text.literal(value).setStyle(spinnyText)).append(Text.literal(" [Hide]").setStyle(hideText)), false);
+                        }
+                        case ViewingTypes.HOVER -> {
+                            final Style hoverText = Style.EMPTY.withObfuscated(true).withHoverEvent(new HoverEvent.ShowText(Text.literal(value)));
+                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> ").append(Text.literal(value).setStyle(hoverText)), false);
+                        }
+                        case ViewingTypes.SHOWN -> {
+                            playerEntity.sendMessage(Text.literal("<" + player.getNameForScoreboard() + " (freakily)> " + value), false);
+                        }
+                    }
+                }
 
-                                return 1;
-                            })));
-            dispatcher.register(literal("nsfw")
-                    .then(literal("hidden").executes(context -> {
-                        final ServerCommandSource source = context.getSource();
-                        if (!source.isExecutedByPlayer()) return 0;
-                        final String self = source.getPlayer().getNameForScoreboard();
-                        freaks.put(self, ViewingTypes.HIDDEN);
-                        context.getSource().sendFeedback(() -> Text.literal("We get it. Waiting till marriage. You have hidden the NSFW chat."), false);
-                        return 1;
-                    })));
-            dispatcher.register(literal("nsfw")
-                    .then(literal("scrambled").executes(context -> {
-                        final ServerCommandSource source = context.getSource();
-                        if (!source.isExecutedByPlayer()) return 0;
-                        final String self = source.getPlayer().getNameForScoreboard();
-                        freaks.put(self, ViewingTypes.SCRAMBLED);
-                        context.getSource().sendFeedback(() -> Text.literal("So does the mystery add to the fun or...  The NSFW Chat will be scrambled."), false);
-                        return 1;
-                    })));
-            dispatcher.register(literal("nsfw")
-                    .then(literal("shown").executes(context -> {
-                        final ServerCommandSource source = context.getSource();
-                        if (!source.isExecutedByPlayer()) return 0;
-                        final String self = source.getPlayer().getNameForScoreboard();
-                        freaks.put(self, ViewingTypes.SHOWN);
-                        context.getSource().sendFeedback(() -> Text.literal("You little pervert! You have been added to the NSFW chat."), false);
-                        return 1;
-                    })));
-            dispatcher.register(literal("nsfw")
-                    .then(literal("hover").executes(context -> {
-                        final ServerCommandSource source = context.getSource();
-                        if (!source.isExecutedByPlayer()) return 0;
-                        final String self = source.getPlayer().getNameForScoreboard();
-                        freaks.put(self, ViewingTypes.HOVER);
-                        context.getSource().sendFeedback(() -> Text.literal("So you can only take it in small doses huh? The NSFW chat will be visible on hover."), false);
-                        return 1;
-                    })));
-            final LiteralCommandNode<ServerCommandSource> message = dispatcher.register(literal("w")
-                    .then(argument("player", EntityArgumentType.player()).then(argument("msg", StringArgumentType.greedyString()).executes(context -> {
-                        final var otherPlayer = EntityArgumentType.getPlayer(context, "player");
-                        final var me = context.getSource().getPlayer();
-                        final var msg = StringArgumentType.getString(context, "msg");
-                        otherPlayer.sendMessage(Text.literal(me.getNameForScoreboard() + " whispers to you: " + msg).setStyle(whisper), false);
-                        convo.put(me.getNameForScoreboard(), otherPlayer);
-                        convo.put(otherPlayer.getNameForScoreboard(), me);
-                        context.getSource().sendFeedback(() -> Text.literal("You whisper to " + otherPlayer.getNameForScoreboard() + ": " + msg).setStyle(whisper), false);
-                        return 1;
-                    }))));
+                return 1;
+            })));
+            dispatcher.register(literal("nsfw").then(literal("hidden").executes(context -> {
+                final ServerCommandSource source = context.getSource();
+                if (!source.isExecutedByPlayer()) return 0;
+                final String self = source.getPlayer().getNameForScoreboard();
+                freaks.put(self, ViewingTypes.HIDDEN);
+                context.getSource().sendFeedback(() -> Text.literal("We get it. Waiting till marriage. You have hidden the NSFW chat."), false);
+                return 1;
+            })));
+            dispatcher.register(literal("nsfw").then(literal("scrambled").executes(context -> {
+                final ServerCommandSource source = context.getSource();
+                if (!source.isExecutedByPlayer()) return 0;
+                final String self = source.getPlayer().getNameForScoreboard();
+                freaks.put(self, ViewingTypes.SCRAMBLED);
+                context.getSource().sendFeedback(() -> Text.literal("So does the mystery add to the fun or...  The NSFW Chat will be scrambled."), false);
+                return 1;
+            })));
+            dispatcher.register(literal("nsfw").then(literal("shown").executes(context -> {
+                final ServerCommandSource source = context.getSource();
+                if (!source.isExecutedByPlayer()) return 0;
+                final String self = source.getPlayer().getNameForScoreboard();
+                freaks.put(self, ViewingTypes.SHOWN);
+                context.getSource().sendFeedback(() -> Text.literal("You little pervert! You have been added to the NSFW chat."), false);
+                return 1;
+            })));
+            dispatcher.register(literal("nsfw").then(literal("hover").executes(context -> {
+                final ServerCommandSource source = context.getSource();
+                if (!source.isExecutedByPlayer()) return 0;
+                final String self = source.getPlayer().getNameForScoreboard();
+                freaks.put(self, ViewingTypes.HOVER);
+                context.getSource().sendFeedback(() -> Text.literal("So you can only take it in small doses huh? The NSFW chat will be visible on hover."), false);
+                return 1;
+            })));
+            final LiteralCommandNode<ServerCommandSource> message = dispatcher.register(literal("w").then(argument("player", EntityArgumentType.player()).then(argument("msg", StringArgumentType.greedyString()).executes(context -> {
+                final var otherPlayer = EntityArgumentType.getPlayer(context, "player");
+                final var me = context.getSource().getPlayer();
+                final var msg = StringArgumentType.getString(context, "msg");
+                otherPlayer.sendMessage(Text.literal(me.getNameForScoreboard() + " whispers to you: " + msg).setStyle(whisper), false);
+                convo.put(me.getNameForScoreboard(), otherPlayer);
+                convo.put(otherPlayer.getNameForScoreboard(), me);
+                context.getSource().sendFeedback(() -> Text.literal("You whisper to " + otherPlayer.getNameForScoreboard() + ": " + msg).setStyle(whisper), false);
+                return 1;
+            }))));
             dispatcher.register(literal("msg").redirect(message));
             dispatcher.register(literal("tell").redirect(message));
             dispatcher.register(literal("r").then(argument("msg", StringArgumentType.greedyString()).executes((context) -> {
@@ -160,14 +148,44 @@ public class ExampleMod implements ModInitializer {
                 context.getSource().sendFeedback(() -> Text.literal("You whisper to " + otherPlayer.getNameForScoreboard() + ": " + msg).setStyle(whisper), false);
                 return 1;
             })));
-            dispatcher.register(literal("impersonate")
-                    .then(argument("player", StringArgumentType.string()).then(argument("msg", StringArgumentType.greedyString()).executes(context -> {
-                        final var otherPlayer = StringArgumentType.getString(context, "player");
-                        final var msg = StringArgumentType.getString(context, "msg");
-                        context.getSource().getPlayer().getServer().getPlayerManager().broadcast(Text.literal("<" + otherPlayer + "> " + msg), false);
-                        return 1;
-                    }))));
+            dispatcher.register(literal("impersonate").then(argument("player", StringArgumentType.string()).then(argument("msg", StringArgumentType.greedyString()).executes(context -> {
+                final var otherPlayer = StringArgumentType.getString(context, "player");
+                final var msg = StringArgumentType.getString(context, "msg");
+                context.getSource().getPlayer().getServer().getPlayerManager().broadcast(Text.literal("<" + otherPlayer + "> " + msg), false);
+                return 1;
+            }))));
+            dispatcher.register(literal("grow").requires(ServerCommandSource::isExecutedByPlayer).executes(context -> {
+                setPlayerSize(context.getSource().getPlayer(), 1.1f);
+                return 1;
+            }).then(argument("player", EntityArgumentType.player()).executes(context -> {
+                setPlayerSize(EntityArgumentType.getPlayer(context, "player"), 1.1f);
+                return 1;
+            })));
+            dispatcher.register(literal("shrink").requires(ServerCommandSource::isExecutedByPlayer).executes(context -> {
+                setPlayerSize(context.getSource().getPlayer(), 1 / 1.1f);
+                return 1;
+            }).then(argument("player", EntityArgumentType.player()).executes(context -> {
+                setPlayerSize(EntityArgumentType.getPlayer(context, "player"), 1 / 1.1f);
+                return 1;
+            })));
+            dispatcher.register(literal("reset_height").requires(ServerCommandSource::isExecutedByPlayer).executes(context -> {
+                setPlayerSize(context.getSource().getPlayer(), 0f);
+                return 1;
+            }).then(argument("player", EntityArgumentType.player()).executes(context -> {
+                setPlayerSize(EntityArgumentType.getPlayer(context, "player"), 0f);
+                return 1;
+            })));
         });
+    }
+
+    private static void setPlayerSize(ServerPlayerEntity playerEntity, float multiplier) throws CommandSyntaxException {
+        var a = playerEntity.getAttributeInstance(EntityAttributes.SCALE);
+        if (multiplier == 0f) {
+            a.setBaseValue(1);
+        } else {
+
+            a.setBaseValue(a.getBaseValue() * multiplier);
+        }
     }
 
     private void onJoin(ServerPlayerEntity serverPlayerEntity) {

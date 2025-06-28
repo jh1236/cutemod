@@ -3,7 +3,11 @@
   "package": "com.example.mixin.client",
   "compatibilityLevel": "JAVA_21",
   "client": [
-    "GameRendererMixin"
+    "FogRendererMixin",
+    "GameRendererMixin",
+    "JukeBoxBlockMixin",
+    "MouseMixin",
+    "PlayerInventoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1
