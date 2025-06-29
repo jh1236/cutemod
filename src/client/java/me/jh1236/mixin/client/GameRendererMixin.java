@@ -1,16 +1,12 @@
-package com.example.mixin.client;
+package me.jh1236.mixin.client;
 
 
-import com.llamalad7.mixinextras.sugar.Local;
-import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import net.minecraft.client.render.GameRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import com.example.ClientZoomManager;
+import me.jh1236.ClientZoomManager;
 
 
 @Mixin(GameRenderer.class)

@@ -1,6 +1,6 @@
-package com.example.mixin;
+package me.jh1236.mixin;
 
-import com.example.IAddNoChecks;
+import me.jh1236.IAddNoChecks;
 import net.minecraft.component.type.BundleContentsComponent;
 import net.minecraft.item.ItemStack;
 import org.spongepowered.asm.mixin.Final;

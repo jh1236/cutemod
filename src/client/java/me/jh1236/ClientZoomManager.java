@@ -1,5 +1,6 @@
-package com.example;
+package me.jh1236;
 
+import me.jh1236.config.Config;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -11,8 +12,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class ClientZoomManager implements ClientModInitializer {
     private static KeyBinding keyBinding;
-    private static final boolean TOGGLE = false;
-    private static final boolean MULTIPLY = false;
     private static int targetScrollCount = 1;
     private static float prevScrollCount = 1;
     private static boolean zooming = false;
@@ -25,13 +24,13 @@ public class ClientZoomManager implements ClientModInitializer {
     public static void addToZoom(int i) {
         prevScrollCount = getZoomCount();
         zoomProgress = 0f;
-        if (MULTIPLY) {
-            targetScrollCount += i;
+        if (!Config.readConfig().zoom.multiplicative) {
+            targetScrollCount += MathHelper.sign(i) * Config.readConfig().zoom.factor;
         } else {
             if (i > 0) {
-                targetScrollCount *= 2;
+                targetScrollCount *= (Config.readConfig().zoom.factor + 1);
             } else {
-                targetScrollCount /= 2;
+                targetScrollCount /= (Config.readConfig().zoom.factor + 1);
             }
         }
         targetScrollCount = Math.max(1, targetScrollCount);
@@ -59,7 +58,8 @@ public class ClientZoomManager implements ClientModInitializer {
                 setClientOptions(client.options);
             }
             boolean change = false;
-            if (TOGGLE) {
+            if (!Config.readConfig().zoom.enabled) return;
+            if (Config.readConfig().zoom.toggleZoom) {
                 while (keyBinding.wasPressed()) {
                     zooming = !zooming;
                     change = true;

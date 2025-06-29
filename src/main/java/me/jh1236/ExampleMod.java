@@ -1,33 +1,41 @@
-package com.example;
+package me.jh1236;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.BundleContentsComponent;
+import net.minecraft.component.type.ConsumableComponents;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.consume.ApplyEffectsConsumeEffect;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -155,36 +163,56 @@ public class ExampleMod implements ModInitializer {
                 return 1;
             }))));
             dispatcher.register(literal("grow").requires(ServerCommandSource::isExecutedByPlayer).executes(context -> {
-                setPlayerSize(context.getSource().getPlayer(), 1.1f);
+                setPlayerSize(List.of(context.getSource().getPlayer()), 1.1f);
+                context.getSource().sendFeedback(() -> Text.literal("Successfully grew 1 players"), false);
                 return 1;
-            }).then(argument("player", EntityArgumentType.player()).executes(context -> {
-                setPlayerSize(EntityArgumentType.getPlayer(context, "player"), 1.1f);
+            }).then(argument("players", EntityArgumentType.players()).executes(context -> {
+                Collection<ServerPlayerEntity> players = EntityArgumentType.getPlayers(context, "players");
+                setPlayerSize(players, 1.1f);
+                context.getSource().sendFeedback(() -> Text.literal("Successfully grew " + players.size() + " players."), false);
                 return 1;
             })));
             dispatcher.register(literal("shrink").requires(ServerCommandSource::isExecutedByPlayer).executes(context -> {
-                setPlayerSize(context.getSource().getPlayer(), 1 / 1.1f);
+                setPlayerSize(List.of(context.getSource().getPlayer()), 1 / 1.1f);
+                context.getSource().sendFeedback(() -> Text.literal("Successfully shrunk 1 players"), false);
                 return 1;
-            }).then(argument("player", EntityArgumentType.player()).executes(context -> {
-                setPlayerSize(EntityArgumentType.getPlayer(context, "player"), 1 / 1.1f);
+            }).then(argument("players", EntityArgumentType.players()).executes(context -> {
+                Collection<ServerPlayerEntity> players = EntityArgumentType.getPlayers(context, "players");
+                setPlayerSize(players, 1 / 1.1f);
+                context.getSource().sendFeedback(() -> Text.literal("Successfully shrunk " + players.size() + " players."), false);
                 return 1;
             })));
             dispatcher.register(literal("reset_height").requires(ServerCommandSource::isExecutedByPlayer).executes(context -> {
-                setPlayerSize(context.getSource().getPlayer(), 0f);
+                setPlayerSize(List.of(context.getSource().getPlayer()), 0f);
+                context.getSource().sendFeedback(() -> Text.literal("Successfully reset 1 players"), false);
                 return 1;
-            }).then(argument("player", EntityArgumentType.player()).executes(context -> {
-                setPlayerSize(EntityArgumentType.getPlayer(context, "player"), 0f);
+            }).then(argument("players", EntityArgumentType.players()).executes(context -> {
+                Collection<ServerPlayerEntity> players = EntityArgumentType.getPlayers(context, "players");
+                setPlayerSize(players, 0f);
+                context.getSource().sendFeedback(() -> Text.literal("Successfully reset " + players.size() + " players."), false);
+                return 1;
+            })));
+            dispatcher.register(literal("prick").requires(ServerCommandSource::isExecutedByPlayer).then(argument("players", EntityArgumentType.players()).executes(context -> {
+                var players = EntityArgumentType.getPlayers(context, "players");
+                for (var player : players) {
+                    ServerWorld world = player.getWorld();
+                    player.damage(world, world.getDamageSources().playerAttack(context.getSource().getPlayer()), 0.01f);
+                }
+                context.getSource().sendFeedback(() -> Text.literal("Successfully pricked " + players.size() + " players."), false);
                 return 1;
             })));
         });
     }
 
-    private static void setPlayerSize(ServerPlayerEntity playerEntity, float multiplier) throws CommandSyntaxException {
-        var a = playerEntity.getAttributeInstance(EntityAttributes.SCALE);
-        if (multiplier == 0f) {
-            a.setBaseValue(1);
-        } else {
+    private static void setPlayerSize(Collection<ServerPlayerEntity> playerEntities, float multiplier) throws CommandSyntaxException {
+        for (var playerEntity : playerEntities) {
+            var a = playerEntity.getAttributeInstance(EntityAttributes.SCALE);
+            if (multiplier == 0f) {
+                a.setBaseValue(1);
+            } else {
 
-            a.setBaseValue(a.getBaseValue() * multiplier);
+                a.setBaseValue(a.getBaseValue() * multiplier);
+            }
         }
     }
 

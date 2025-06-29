@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "me.jh1236.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "server": [
+    "MessageCommandMixin",
+    "BundleContentsComponentMixin",
+    "PathBlockMixin",
+    "PlayerEntityMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
