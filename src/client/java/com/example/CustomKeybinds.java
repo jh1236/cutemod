@@ -20,10 +20,14 @@ public class CustomKeybinds implements ClientModInitializer {
     private static float clientFov = 0f;
     private static double clientSens = 0f;
 
+    private static float prevFrameTime;
+
 
 
     @Override
     public void onInitializeClient() {
+        prevFrameTime = System.currentTimeMillis();
+
 
         keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "Zoom", // The translation key of the keybinding's name
@@ -61,7 +65,10 @@ public class CustomKeybinds implements ClientModInitializer {
     }
 
     public void zoom() {
-        zoomAmount += zoomed ? 0.1f : -0.1f;
+        float currFrameTime = System.currentTimeMillis();
+        float deltaTime = (currFrameTime - prevFrameTime);
+        prevFrameTime = currFrameTime;
+        zoomAmount += zoomed ? 0.1f : -99999999999999999f * deltaTime;
         zoomAmount = clamp01(zoomAmount);
     }
 

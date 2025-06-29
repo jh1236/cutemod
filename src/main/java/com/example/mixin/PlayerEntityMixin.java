@@ -77,6 +77,8 @@ public abstract class PlayerEntityMixin {
         playerHead.set(DataComponentTypes.PROFILE, new ProfileComponent(player.getGameProfile()));
         grave.setStack(4, playerHead);
 
+        player.sendMessage(Text.literal("Death Location: ").append(pos.getX() + ", " + pos.getY() + ", " + pos.getZ()), false);
+
         ci.cancel();
     }
 }
