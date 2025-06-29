@@ -1,4 +1,4 @@
-package com.example;
+package me.jh1236;
 
 import net.minecraft.item.ItemStack;
 

@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "me.jh1236.mixin.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "FogRendererMixin",
+    "GameRendererMixin",
+    "JukeBoxBlockMixin",
+    "MouseMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}

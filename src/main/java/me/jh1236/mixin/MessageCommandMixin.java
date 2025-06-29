@@ -1,4 +1,4 @@
-package com.example.mixin;
+package me.jh1236.mixin;
 
 import net.minecraft.server.command.MessageCommand;
 import org.spongepowered.asm.mixin.Mixin;

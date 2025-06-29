@@ -2,31 +2,34 @@
 	"schemaVersion": 1,
 	"id": "modid",
 	"version": "${version}",
-	"name": "AutoGG",
-	"description": "A really simple mod that automatically sends GG on advancement get and o/ on join",
+	"name": "Cute Mod",
+	"description": "A mod that adds everything that I want in the game",
 	"authors": [
 		"Jh1236"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/jh1236/cutemod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/modid/icon.png",
+	"icon": "assets/cutemod/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.example.ExampleMod"
+			"me.jh1236.ExampleMod"
 		],
 		"client": [
-			"com.example.ExampleModClient",
-			"com.example.CustomKeybinds"
+			"me.jh1236.ClientMessageManager",
+			"me.jh1236.ClientZoomManager"
+		],
+		"modmenu": [
+			"me.jh1236.config.ModMenuIntegration"
 		]
 	},
 	"mixins": [
-		"modid.mixins.json",
+		"jh1236.mixins.json",
 		{
-			"config": "modid.client.mixins.json",
+			"config": "jh1236.client.mixins.json",
 			"environment": "client"
 		}
 	],
@@ -39,5 +42,14 @@
 	},
 	"suggests": {
 		"another-mod": "*"
+	},
+	"custom": {
+		"modmenu": {
+			"links": {
+				"modmenu.discord": "https://discord.gg/jEGF5fb"
+			},
+			"badges": [  ],
+			"update_checker": true
+		}
 	}
 }

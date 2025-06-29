@@ -1,0 +1,13 @@
+{
+  "text.autoconfig.cuteMod.option.fogEnabled": "Fog Enabled",
+  "text.autoconfig.cuteMod.option.nonDirectionalJukebox": "Non-Directional Jukeboxes",
+  "text.autoconfig.cuteMod.option.zoom": "Zoom Settings",
+  "text.autoconfig.cuteMod.option.zoom.enabled": "Enabled",
+  "text.autoconfig.cuteMod.option.zoom.toggle": "Toggle Mode",
+  "text.autoconfig.cuteMod.option.zoom.multiplicative": "Multiply Mode",
+  "text.autoconfig.cuteMod.option.zoom.factor": "Zoom Factor",
+  "text.autoconfig.cuteMod.option.messages": "Messages Settings",
+  "text.autoconfig.cuteMod.option.messages.joinMessageEnabled": "Message on Join",
+  "text.autoconfig.cuteMod.option.messages.advancementMessageEnabled": "Message on Advancement",
+  "text.autoconfig.cuteMod.option.title": "Cute Mod Settings"
+}

@@ -1,35 +1,26 @@
-package com.example.mixin;
+package me.jh1236.mixin;
 
-import com.example.ExampleMod;
-import com.example.IAddNoChecks;
+import me.jh1236.ExampleMod;
+import me.jh1236.IAddNoChecks;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.*;
 import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.block.entity.ChestBlockEntity;
 import net.minecraft.component.type.BundleContentsComponent;
-import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtByte;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.storage.ReadView;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import javax.xml.crypto.Data;
 
 @Mixin(PlayerEntity.class)
 public abstract class PlayerEntityMixin {
@@ -40,13 +31,13 @@ public abstract class PlayerEntityMixin {
     @Shadow
     public abstract Text getDisplayName();
 
-
     @Inject(method = "dropInventory", at = @At(value = "HEAD"), cancellable = true)
     private void injected(ServerWorld world, CallbackInfo ci) {
         var is = ExampleMod.CustomBundle.copy();
         var builder = new BundleContentsComponent.Builder(BundleContentsComponent.DEFAULT);
         for (var i : inventory) {
             if (i.isEmpty()) continue;
+            //noinspection ConstantConditions
             if (builder instanceof IAddNoChecks) {
                 ((IAddNoChecks) builder).addNoChecks(i);
             }
